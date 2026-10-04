@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SRPanel · 服务器资源监控</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-logo">SR</span>
+        <div>
+          <h1>SRPanel</h1>
+          <p class="subtitle" id="hostname" data-i18n="loading">加载中…</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="status" id="status">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text" data-i18n="connecting">连接中…</span>
+        </span>
+        <label class="interval">
+          <span data-i18n="refreshInterval">刷新间隔</span>
+          <select id="interval-select">
+            <option value="1000">1s</option>
+            <option value="2000" selected>2s</option>
+            <option value="5000">5s</option>
+            <option value="10000">10s</option>
+          </select>
+        </label>
+        <button id="lang-btn" class="btn btn-ghost" title="Switch language / 切换语言">EN</button>
+        <button id="pause-btn" class="btn" data-i18n="pause">暂停</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 概览卡片 -->
+    <section class="grid grid-4">
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="cpuUsage">CPU 使用率</span>
+          <span class="card-icon">⚡</span>
+        </div>
+        <div class="big-value"><span id="cpu-percent">--</span><small>%</small></div>
+        <div class="progress"><div class="progress-fill" id="cpu-bar"></div></div>
+        <p class="meta" id="cpu-meta">--</p>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="memory">内存</span>
+          <span class="card-icon">🧩</span>
+        </div>
+        <div class="big-value"><span id="mem-percent">--</span><small>%</small></div>
+        <div class="progress"><div class="progress-fill" id="mem-bar"></div></div>
+        <p class="meta" id="mem-meta">--</p>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="diskRoot">磁盘（根分区）</span>
+          <span class="card-icon">💾</span>
+        </div>
+        <div class="big-value"><span id="disk-percent">--</span><small>%</small></div>
+        <div class="progress"><div class="progress-fill" id="disk-bar"></div></div>
+        <p class="meta" id="disk-meta">--</p>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="uptime">系统运行时间</span>
+          <span class="card-icon">⏱️</span>
+        </div>
+        <div class="big-value uptime-value" id="uptime">--</div>
+        <p class="meta" id="boot-time" data-i18n="bootTimeInit">启动时间 --</p>
+        <p class="meta" id="os-info">--</p>
+      </article>
+    </section>
+
+    <!-- 明细区域 -->
+    <section class="grid grid-2">
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="cpuCores">CPU 各核心</span>
+          <span class="card-sub" id="cpu-cores-sub"></span>
+        </div>
+        <div class="cores" id="cpu-cores"></div>
+        <p class="meta" id="cpu-extra"></p>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="network">网络流量</span>
+          <span class="card-sub" data-i18n="liveRate">实时速率</span>
+        </div>
+        <div class="net-rates">
+          <div class="net-rate">
+            <span class="net-arrow up">↑</span>
+            <div>
+              <p class="net-value" id="net-send-rate">--</p>
+              <p class="net-label" data-i18n="uploadRate">发送速率</p>
+            </div>
+          </div>
+          <div class="net-rate">
+            <span class="net-arrow down">↓</span>
+            <div>
+              <p class="net-value" id="net-recv-rate">--</p>
+              <p class="net-label" data-i18n="downloadRate">接收速率</p>
+            </div>
+          </div>
+        </div>
+        <p class="meta" id="net-total" data-i18n="netTotalInit">累计 ↑ -- / ↓ --</p>
+      </article>
+    </section>
+
+    <section class="grid grid-2">
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="diskPartitions">磁盘分区</span>
+          <span class="card-sub" data-i18n="allMounts">全部挂载点</span>
+        </div>
+        <div id="disk-list" class="disk-list">
+          <p class="meta" data-i18n="loading">加载中…</p>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <span class="card-title" data-i18n="systemInfo">系统信息</span>
+          <span class="card-sub" data-i18n="systemSub">系统</span>
+        </div>
+        <ul class="info-list" id="sys-info">
+          <li><span data-i18n="hostName">主机名</span><b>--</b></li>
+          <li><span data-i18n="osLabel">操作系统</span><b>--</b></li>
+          <li><span data-i18n="kernelLabel">内核版本</span><b>--</b></li>
+          <li><span data-i18n="archLabel">架构</span><b>--</b></li>
+          <li><span data-i18n="pythonLabel">Python</span><b>--</b></li>
+          <li><span data-i18n="swapLabel">Swap</span><b>--</b></li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span data-i18n="footerTagline">SRPanel · 开源服务器资源监控面板</span>
+      <span><span data-i18n="lastUpdated">最近更新：</span><span id="updated">--</span></span>
+    </footer>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
